@@ -3,3 +3,11 @@
 
 # Ada Library Information
 *.ali
+
+
+*.iml
+
+*.xml
+
+
+.idea
