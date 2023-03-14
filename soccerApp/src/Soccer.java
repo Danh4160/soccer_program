@@ -68,7 +68,7 @@ public class Soccer {
             case "3":
                 while (true) {
 //                    System.out.println("List of each match gross revenue");
-                    listMatchRevenu();
+                    listMatchRevenue();
                     System.out.println("\nEnter [P] to go to previous menu:");
                     if (myInput.nextLine().compareTo("P") == 0) break;
                 }
@@ -83,7 +83,7 @@ public class Soccer {
             default:
         }
     }
-    public static void listMatchRevenu() throws SQLException {
+    public static void listMatchRevenue() throws SQLException {
         System.out.println("Team 1 | Team 2 | Revenue ($CAD) | Seats Sold | Max Capacity  | Stadium | Location | Date | Round | Score");
         try {
             String sqlString =
