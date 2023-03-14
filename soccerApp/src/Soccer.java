@@ -1,4 +1,6 @@
+import javax.swing.plaf.nimbus.State;
 import java.sql.*;
+import java.time.LocalDate;
 import  java.util.Scanner;
 
 public class Soccer {
@@ -33,7 +35,7 @@ public class Soccer {
             displayMenu();
             myInput = new Scanner(System.in);
             String optionCode = myInput.nextLine();
-            System.out.println(optionCode);
+//            System.out.println(optionCode);
             handleOptionCode(optionCode);
         }
     }
@@ -42,7 +44,7 @@ public class Soccer {
         System.out.println("Soccer Main Menu");
         System.out.println("\t 1. List information of matches of a country");
         System.out.println("\t 2. Insert initial player information for a match");
-        System.out.println("\t 3. For you to design");
+        System.out.println("\t 3. List each match revenue");
         System.out.println("\t 4. Exit Application");
         System.out.println("Please Enter Your Option:");
     }
@@ -64,6 +66,12 @@ public class Soccer {
                 break;
 
             case "3":
+                while (true) {
+//                    System.out.println("List of each match gross revenue");
+                    listMatchRevenu();
+                    System.out.println("\nEnter [P] to go to previous menu:");
+                    if (myInput.nextLine().compareTo("P") == 0) break;
+                }
                 break;
 
             case "4":
@@ -75,9 +83,44 @@ public class Soccer {
             default:
         }
     }
+    public static void listMatchRevenu() throws SQLException {
+        System.out.println("Team 1 | Team 2 | Revenue ($CAD) | Seats Sold | Max Capacity  | Stadium | Location | Date | Round | Score");
+        try {
+            String sqlString =
+                    """
+                    select country1, country2, revenue, stadium.name, location, seatsSold, capacity, date, round, score from match
+                    inner join matchplayed
+                    on match.matchid = matchplayed.matchid
+                    inner join (select  matchid, sum(price) as revenue, count(ticketid) as seatsSold from ticket
+                                group by matchid) as table2
+                    on match.matchid = table2.matchid
+                    inner join stadium
+                    on match.name = stadium.name
+                    order by revenue DESC                         
+                    """;
+            Statement stmt = con.createStatement();
+            ResultSet res = stmt.executeQuery(sqlString);
+            while (res.next()) {
+                String country1 = res.getString("COUNTRY1");
+                String country2 = res.getString("COUNTRY2");
+                int revenue = res.getInt("REVENUE");
+                String stadiumName = res.getString("NAME");
+                String stadiumLocation = res.getString("LOCATION");
+                int seats = res.getInt("SEATSSOLD");
+                int capacity = res.getInt("Capacity");
+                Date date = res.getDate("DATE");
+                String group = res.getString("ROUND");
+                String score = res.getString("SCORE");
+                System.out.println(country1 + "\t" + country2 + "\t" + revenue + "\t" + stadiumName +
+                        "\t" + stadiumLocation + "\t" + seats + "\t" + capacity + "\t" + date +
+                        group + "\t" + score );
+            }
+        } catch (SQLException e) {
+            printError(e);
+        }
 
+    }
     public static void listCountryMatchInfo(String countryName) throws SQLException {
-//        System.out.println(countryName);
         System.out.println("Team 1 | Team 2 | Date of Match | Round | Score | Seats Sold");
         try {
             String sqlString =
