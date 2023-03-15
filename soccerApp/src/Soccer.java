@@ -31,8 +31,8 @@ public class Soccer {
         String url = "jdbc:db2://winter2023-comp421.cs.mcgill.ca:50000/cs421";
 
         //REMEMBER to remove your user id and password before submitting your code!!
-        String your_userid = "cs421g30";
-        String your_password = "harshGroup30dan.";
+        String your_userid = "";
+        String your_password = "";
 
         con = DriverManager.getConnection (url,your_userid,your_password) ;
 
