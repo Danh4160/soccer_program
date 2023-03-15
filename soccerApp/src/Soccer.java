@@ -10,10 +10,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Soccer {
-    static String LIST = "1";
-    static String INSERT = "2";
-    static String YOU = "3";
-    static String EXIT = "4";
     static Connection con;
     static boolean status = true;
     static Scanner myInput;
