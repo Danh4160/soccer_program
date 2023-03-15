@@ -39,10 +39,8 @@ public class Soccer {
         while(status) {
             // First main menu
             displayMenu();
-            Scanner myInput = new Scanner(System.in);
             myInput = new Scanner(System.in);
             String optionCode = myInput.nextLine();
-//            System.out.println(optionCode);
             handleOptionCode(optionCode);
         }
     }
@@ -70,7 +68,6 @@ public class Soccer {
                 break;
 
             case "2":
-
                 int count = 0;
 
                 System.out.println("Matches");
@@ -134,7 +131,7 @@ public class Soccer {
                     }
                     rs3.close();
                     System.out.println("\n");
-                    ResultSet rs4 = stmt.executeQuery("Select count(mp.shirtnumber) as numplayers from matchplayerinfo mp  where mp.country='" + country + "' AND mp.matchid=" + midstring);
+                    ResultSet rs4 = stmt.executeQuery("Select count(mp.shirtnumber) as numplayers from matchplayerinfo mp  where mp.country='" + country + "' AND mp.matchid=" + midstring + ";");
                     while (rs4.next()) {
                         count = rs4.getInt("numplayers");
 
@@ -151,28 +148,27 @@ public class Soccer {
                     Scanner num = new Scanner(System.in);
                     String numberOfPlayer = num.nextLine();
 
-
-                    if (country.equals("P") || country.equals("p")) {
-                        //probably need status used in ofr loop to break out
-                        break;
+                    if (numberOfPlayer.equals("P") || numberOfPlayer.equals("p")) {
+                            //probably need status used in ofr loop to break out
+                            break;
                     }
-
 
                     System.out.println("Enter the position on the field the player you want to insert will take or exit with [P] to go to the previous menu");
                     Scanner positionIn = new Scanner(System.in);
                     String inputtedPosition = positionIn.nextLine();
-
+                    if (inputtedPosition.equals("P") || inputtedPosition.equals("p")) {
+                        //probably need status used in ofr loop to break out
+                        break;
+                    }
                     stmt.executeUpdate("INSERT INTO MatchPlayerInfo(Matchid,Country,ShirtNumber,OnField,Offfield,PositionOnField,YellowCard,RedCard) VALUES (" + midstring + ",'" + country + "'," + numberOfPlayer + ",0,0,'" + inputtedPosition + "',0,0)");
-
                 }
-
                 break;
 
             case "3":
                 while (true) {
 //                    System.out.println("List of each match gross revenue");
                     listMatchRevenue();
-                    System.out.println("\nEnter [P] to go to previous menu:");
+                    System.out.println("\nEnter [A] to list again or Enter [P] to go to previous menu:");
                     if (myInput.nextLine().compareTo("P") == 0) break;
                 }
                 break;
@@ -190,17 +186,14 @@ public class Soccer {
         System.out.println("Team 1 | Team 2 | Revenue ($CAD) | Seats Sold | Max Capacity  | Stadium | Location | Date | Round | Score");
         try {
             String sqlString =
-                    """
-                    select country1, country2, revenue, stadium.name, location, seatsSold, capacity, date, round, score from match
-                    inner join matchplayed
-                    on match.matchid = matchplayed.matchid
-                    inner join (select  matchid, sum(price) as revenue, count(ticketid) as seatsSold from ticket
-                                group by matchid) as table2
-                    on match.matchid = table2.matchid
-                    inner join stadium
-                    on match.name = stadium.name
-                    order by revenue DESC                         
-                    """;
+		    "SELECT country1, country2, coalesce(revenue, 0) as revenue, stadium.name, location, coalesce(seatsSold, 0) as seatsSold, capacity, date, round, score " +
+		    "FROM match " +
+		    "INNER JOIN matchplayed " + 
+                    "ON match.matchid = matchplayed.matchid " +
+		    "LEFT JOIN (SELECT  matchid, sum(price) AS revenue, COUNT(ticketid) AS seatsSold FROM ticket GROUP BY matchid) AS table2 " +
+                    "ON match.matchid = table2.matchid " +
+		    "INNER JOIN stadium ON match.name = stadium.name " +
+		    "ORDER BY revenue DESC";
             Statement stmt = con.createStatement();
             ResultSet res = stmt.executeQuery(sqlString);
             while (res.next()) {
@@ -226,23 +219,18 @@ public class Soccer {
     public static void listCountryMatchInfo(String countryName) throws SQLException {
         System.out.println("Team 1 | Team 2 | Date of Match | Round | Score | Seats Sold");
         try {
-            String sqlString =
-                    """
-                    with table1 as (
-                        select MatchPlayed.matchid, MatchPlayed.country1, MatchPlayed.country2, Date, Match.Round, MatchPlayed.Score from Match
-                        inner join MatchPlayed
-                        on Match.matchid = MatchPlayed.matchid
-                        where MatchPlayed.country1 = ? or MatchPlayed.country2 = ?
-                        )
-                    select country1, country2, Date, Round, Score, seatsSold from table1
-                    inner join (select Ticket.matchid, count(Ticket.ticketid) as seatsSold from Ticket
-                    group by Ticket.matchid) as table2
-                    on table1.matchid = table2.matchid
-                    """;
-            PreparedStatement stmt = con.prepareStatement(sqlString);
-            stmt.setString(1, countryName);
-            stmt.setString(2, countryName);
-            ResultSet res = stmt.executeQuery();
+            String sqlString = "WITH table1 AS (SELECT MatchPlayed.matchid, MatchPlayed.country1, MatchPlayed.country2, Date, Match.Round, MatchPlayed.Score " + 
+		    "FROM Match " + 
+		    "INNER JOIN MatchPlayed " +
+		    "ON Match.matchid = MatchPlayed.matchid WHERE MatchPlayed.country1 = '" + countryName + "' " + 
+		    "OR MatchPlayed.country2 = '" + countryName + "') " + 
+                    "SELECT country1, country2, Date, Round, Score, coalesce(seatsSold, 0) as seatsSold " +
+		    "FROM table1 " + 
+		    "LEFT JOIN (" + "SELECT Ticket.matchid, COUNT(Ticket.ticketid) AS seatsSold " + "FROM Ticket " +
+			"GROUP BY Ticket.matchid) AS table2 " +
+			"ON table1.matchid = table2.matchid";
+            Statement stmt = con.createStatement();
+	    ResultSet res = stmt.executeQuery(sqlString);
             while (res.next()) {
                 String country1 = res.getString("COUNTRY1");
                 String country2 = res.getString("COUNTRY2");
